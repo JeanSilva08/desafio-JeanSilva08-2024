@@ -19,76 +19,82 @@ class RecintosZoo {
   }
 
   analisaRecintos(animal, quantidade) {
+    console.log(`Analisando recintos para o animal: ${animal}, quantidade: ${quantidade}`);
+
     if (!this.validaAnimal(animal)) {
+      console.log('Animal inválido');
       return { erro: "Animal inválido" };
     }
   
     if (quantidade <= 0 || !Number.isInteger(quantidade)) {
+      console.log('Quantidade inválida');
       return { erro: "Quantidade inválida" };
     }
   
     let recintosViaveis = [];
   
     for (let recinto of this.recintos) {
+      console.log(`Verificando o recinto ${recinto.numero}:`, recinto);
       if (this.validaBioma(recinto, animal) &&
           this.validaEspaco(recinto, animal, quantidade) &&
           this.verificaRegrasEspecificas(recinto, animal)) {
         let espacoLivre = this.calculaEspacoLivre(recinto, animal, quantidade);
-        if (espacoLivre >= 0) { // Verifica se o espaço livre é válido
+        console.log(`Espaço livre para ${animal} em recinto ${recinto.numero}: ${espacoLivre}`);
+        if (espacoLivre >= 0) {
           recintosViaveis.push(`Recinto ${recinto.numero} (espaço livre: ${espacoLivre} total: ${recinto.tamanhoTotal})`);
         }
       }
     }
   
     if (recintosViaveis.length > 0) {
-      return { recintosViaveis: recintosViaveis.sort() };
+      recintosViaveis.sort();
+      console.log('Recintos viáveis encontrados:', recintosViaveis);
+      return { recintosViaveis };
     } else {
+      console.log('Não há recinto viável');
       return { erro: "Não há recinto viável" };
     }
   }
-  
 
   validaAnimal(animal) {
-    const valido = this.animaisPermitidos.hasOwnProperty(animal);
-    console.log(`Animal ${animal} válido: ${valido}`);
-    return valido;
+    const isValid = this.animaisPermitidos.hasOwnProperty(animal);
+    console.log(`Validação de animal (${animal}): ${isValid}`);
+    return isValid;
   }
 
   validaBioma(recinto, animal) {
-    const biomaValido = this.animaisPermitidos[animal].biomas.includes(recinto.bioma);
-    console.log(`Bioma do recinto ${recinto.numero} (${recinto.bioma}) é válido para ${animal}: ${biomaValido}`);
-    return biomaValido;
+    const isValid = this.animaisPermitidos[animal].biomas.includes(recinto.bioma);
+    console.log(`Validação de bioma (${recinto.bioma} para ${animal}): ${isValid}`);
+    return isValid;
   }
 
   validaEspaco(recinto, animal, quantidade) {
-    let espacoNecessario = quantidade * this.espacoPorAnimal[animal];
-    let espacoOcupado = recinto.animais.reduce((total, a) => total + (a.tipo === animal ? this.espacoPorAnimal[a.tipo] : 0), 0);
+    let espacoNecessario = quantidade * this.animaisPermitidos[animal].tamanho;
+    let espacoOcupado = recinto.animais.reduce((total, a) => total + (this.animaisPermitidos[a.especie].tamanho * a.quantidade), 0);
     let espacoTotal = recinto.tamanhoTotal;
   
-    console.log(`Espaço necessário: ${espacoNecessario}, espaço ocupado: ${espacoOcupado}, espaço total: ${espacoTotal}, espaço suficiente: ${espacoTotal - espacoOcupado >= espacoNecessario}`);
+    console.log(`Espaço necessário: ${espacoNecessario}, espaço ocupado: ${espacoOcupado}, espaço total: ${espacoTotal}`);
   
     return espacoTotal - espacoOcupado >= espacoNecessario;
   }
-  
 
   verificaRegrasEspecificas(recinto, animal) {
+    let regraValida = false;
+  
     if (['LEAO', 'LEOPARDO', 'CROCODILO'].includes(animal)) {
-      const regraValida = recinto.animais.every(a => a.especie === animal);
-      console.log(`Regras específicas para ${animal} no recinto ${recinto.numero} válidas: ${regraValida}`);
-      return regraValida;
+      regraValida = recinto.animais.every(a => a.especie === animal);
+      console.log(`Regras específicas para carnívoros (${animal}) no recinto ${recinto.numero}: ${regraValida}`);
+    } else if (animal === 'HIPOPOTAMO') {
+      regraValida = recinto.bioma === 'savana e rio' || recinto.animais.every(a => a.especie === 'HIPOPOTAMO');
+      console.log(`Regras específicas para hipopótamos no recinto ${recinto.numero}: ${regraValida}`);
+    } else if (animal === 'MACACO') {
+      regraValida = recinto.animais.length > 0;
+      console.log(`Regras específicas para macacos no recinto ${recinto.numero}: ${regraValida}`);
+    } else {
+      regraValida = true;
     }
-    if (animal === 'HIPOPOTAMO') {
-      const regraValida = recinto.bioma === 'savana e rio' || recinto.animais.every(a => a.especie === 'HIPOPOTAMO');
-      console.log(`Regras específicas para HIPOPOTAMO no recinto ${recinto.numero} válidas: ${regraValida}`);
-      return regraValida;
-    }
-    if (animal === 'MACACO') {
-      // Permitir que macacos compartilhem recinto com outros tipos de animais
-      const regraValida = this.animaisPermitidos[animal].biomas.includes(recinto.bioma);
-      console.log(`Regras específicas para MACACO no recinto ${recinto.numero} válidas: ${regraValida}`);
-      return regraValida;
-    }
-    return true;
+  
+    return regraValida;
   }
   
 
@@ -98,14 +104,20 @@ class RecintosZoo {
     }, 0);
   
     let espacoNecessario = this.animaisPermitidos[animal].tamanho * quantidade;
-    let outrasEspecies = recinto.animais.some(a => a.especie !== animal);
+    let espacoLivre = recinto.tamanhoTotal - espacoOcupado;
   
-    if (outrasEspecies) espacoNecessario += 1; // Adiciona espaço extra para múltiplas espécies
+    if (recinto.animais.length > 0) {
+      espacoLivre -= 1; // Ajuste por mais de uma espécie
+    }
   
-    const espacoLivre = (recinto.tamanhoTotal - espacoOcupado - espacoNecessario);
-    console.log(`Espaço ocupado: ${espacoOcupado}, espaço necessário: ${espacoNecessario}, espaço livre: ${espacoLivre}`);
+    espacoLivre -= espacoNecessario;
+  
+    console.log(`Espaço ocupado: ${espacoOcupado}, espaço livre antes do ajuste: ${espacoLivre + espacoNecessario}, espaço livre após o ajuste: ${espacoLivre}`);
+  
     return espacoLivre;
   }
+  
 }
+
 
 export { RecintosZoo };
