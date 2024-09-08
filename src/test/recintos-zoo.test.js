@@ -1,6 +1,11 @@
-import { RecintosZoo } from "./recintos-zoo.js";
+import { RecintosZoo } from "../classes/recintos-zoo.js";
 
 describe('Recintos do Zoologico', () => {
+
+
+    test('Jest está configurado corretamente', () => {
+        expect(true).toBe(true);
+      });
 
     test('Deve rejeitar animal inválido', () => {
             const resultado = new RecintosZoo().analisaRecintos('UNICORNIO', 1);
