@@ -37,4 +37,19 @@ describe('Recintos do Zoologico', () => {
         expect(resultado.recintosViaveis.length).toBe(3);
     });
 
+    test('Hipopótamos podem conviver no bioma savana e rio', () => {
+        const resultado = new RecintosZoo().analisaRecintos('HIPOPOTAMO', 1);
+        expect(resultado.erro).toBeFalsy();
+        expect(resultado.recintosViaveis).toBeTruthy(); // Verifica se encontrou recintos viáveis
+        expect(resultado.recintosViaveis[0]).toBe('Recinto 4 (espaço livre: 4 total: 8)'); // Verifique o recinto correto retornado
+    });
+
+    test('Animais sem regras específicas devem ser aceitos em qualquer recinto', () => {
+        const recinto = { bioma: 'floresta', animais: [{ especie: 'VEADO' }] }; // Um animal sem regras específicas
+        const resultado = new RecintosZoo().verificaRegrasEspecificas(recinto, 'VEADO');
+        expect(resultado).toBe(true); // O teste espera que a regra seja verdadeira para o veado
+    });
+
+
 });
+
