@@ -55,15 +55,8 @@ class RecintosZoo {
         }
     }
 
-    verificaRegrasEspecificas(recinto, animal) {
-        // Checa se o animal é permitido e se há regras específicas
-        if (this.animaisPermitidos[animal]) {
-            // Se há regras específicas para o animal
-            return CalculaConforto.verificaConforto(recinto, animal, this.animaisPermitidos);
-        }
-        // Se o animal não tem regras específicas, deve ser aceito em qualquer recinto
-        return true;
-    }
+    
 }
 
-export { RecintosZoo };
+
+export { RecintosZoo as RecintosZoo };

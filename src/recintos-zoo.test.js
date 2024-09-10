@@ -1,4 +1,6 @@
 import { RecintosZoo } from "./recintos-zoo.js";
+import { Animal } from "./componentes/animal.js";
+import { CalculaConforto } from "./componentes/calcula-conforto.js";
 
 describe('Recintos do Zoologico', () => {
 
@@ -44,11 +46,72 @@ describe('Recintos do Zoologico', () => {
         expect(resultado.recintosViaveis[0]).toBe('Recinto 4 (espaço livre: 4 total: 8)'); // Verifique o recinto correto retornado
     });
 
-    test('Animais sem regras específicas devem ser aceitos em qualquer recinto', () => {
-        const recinto = { bioma: 'floresta', animais: [{ especie: 'VEADO' }] }; // Um animal sem regras específicas
-        const resultado = new RecintosZoo().verificaRegrasEspecificas(recinto, 'VEADO');
-        expect(resultado).toBe(true); // O teste espera que a regra seja verdadeira para o veado
+
+    test('Deve criar um objeto Animal corretamente', () => {
+        const animal = new Animal('MACACO', 1, ['savana', 'floresta']);
+        expect(animal.especie).toBe('MACACO');
+        expect(animal.tamanho).toBe(1);
+        expect(animal.biomas).toEqual(['savana', 'floresta']);
     });
+
+    test('Deve verificar regras de conforto para o HIPOPOTAMO', () => {
+        const zoo = new RecintosZoo();
+        const recinto = { numero: 3, bioma: 'savana e rio', tamanhoTotal: 7, animais: [{ especie: 'HIPOPOTAMO', quantidade: 2 }] };
+        const resultado = CalculaConforto.verificaConforto(recinto, 'HIPOPOTAMO', zoo.animaisPermitidos);
+        expect(resultado).toBe(true);
+    });
+    
+    
+    test('Deve retornar erro quando nenhum recinto é viável', () => {
+        const resultado = new RecintosZoo().analisaRecintos('GAZELA', 10); // Uma quantidade maior que qualquer espaço disponível
+        expect(resultado.erro).toBe("Não há recinto viável");
+        expect(resultado.recintosViaveis).toBeFalsy();
+    });
+
+    test('Deve rejeitar recinto com predadores para macacos', () => {
+        const recinto = {
+            numero: 1,
+            bioma: 'floresta',
+            tamanhoTotal: 10,
+            animais: [{ especie: 'LEAO', quantidade: 1 }]
+        };
+        const resultado = CalculaConforto.verificaConforto(recinto, 'MACACO', {});
+        expect(resultado).toBe(false); // Deve retornar falso já que há um predador (LEAO)
+    });
+    
+    test('Deve aceitar recinto sem predadores para macacos', () => {
+        const recinto = {
+            numero: 2,
+            bioma: 'floresta',
+            tamanhoTotal: 10,
+            animais: [{ especie: 'GAZELA', quantidade: 1 }]
+        };
+        const resultado = CalculaConforto.verificaConforto(recinto, 'MACACO', {});
+        expect(resultado).toBe(true); // Deve retornar verdadeiro já que não há predadores
+    });
+    
+    test('Deve rejeitar recinto com leopardo para macacos', () => {
+        const recinto = {
+            numero: 3,
+            bioma: 'floresta',
+            tamanhoTotal: 8,
+            animais: [{ especie: 'LEOPARDO', quantidade: 1 }]
+        };
+        const resultado = CalculaConforto.verificaConforto(recinto, 'MACACO', {});
+        expect(resultado).toBe(false); // Deve retornar falso, já que há um LEOPARDO
+    });
+    
+    test('Deve aceitar recinto sem predadores para macacos (nenhum animal)', () => {
+        const recinto = {
+            numero: 4,
+            bioma: 'floresta',
+            tamanhoTotal: 8,
+            animais: []
+        };
+        const resultado = CalculaConforto.verificaConforto(recinto, 'MACACO', {});
+        expect(resultado).toBe(true); // Deve retornar verdadeiro, pois não há nenhum animal no recinto
+    });
+    
 
 
 });
